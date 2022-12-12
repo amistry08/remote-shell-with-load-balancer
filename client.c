@@ -14,6 +14,7 @@ int main(int argc, char const *argv[])
     char buff[MAX_BUFFER];
     int server, n;
 
+    // Connecting to Server A
     connect_Server(&server, IP_SERVER_A, PORT_A);
     write(server, "c", 1);
 

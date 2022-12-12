@@ -12,9 +12,10 @@ int PORT_A = 5000,
     MAX_CLIENT_PER_SERVER = 1000,
     MAX_BUFFER = 100000;
 
-char IP_SERVER_A[] = "127.0.1.1";
-char IP_SERVER_B[] = "127.0.1.1";
+char IP_SERVER_A[] = "127.0.0.1";
+char IP_SERVER_B[] = "127.0.0.1";
 
+// Function to connect to server
 void connect_Server(int *server, char *ip, int portNumber)
 {
 

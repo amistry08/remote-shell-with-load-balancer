@@ -31,6 +31,7 @@ int run_command(char *buff, int length)
     
     if (fork() == 0)
     {
+        // child
         system(buff);
         fprintf(stderr, "\nrRunning system command");
         exit(1);
@@ -49,6 +50,7 @@ void ServeClient(int sd, const char *serverType)
     dup2(sd, STDOUT_FILENO);
     dup2(sd, STDIN_FILENO);
     dup2(sd, STDERR_FILENO);
+
     while (1)
     {
         fprintf(stderr, "\nmessage : Client input ");
@@ -73,12 +75,14 @@ void ServeClient(int sd, const char *serverType)
 
 int main(int argc, char const *argv[])
 {
+    // Condition to check arguments to distinguish Server A and B
     if (argc < 2)
     {
         printf("\nSyntax : ./Server A or B\n");
         exit(1);
     }
 
+    // creating Server 
     int sd, server_a_id, client, n;
     char buffer[MAX_BUFFER];
     if (strcmp(argv[1], "A") == 0)
@@ -88,6 +92,7 @@ int main(int argc, char const *argv[])
     else
     {
         create_Server(&sd, PORT_B);
+        // Server B connecting to Server A
         connect_Server(&server_a_id, IP_SERVER_A, PORT_A);
         fprintf(stderr, "\nMessage : Server B -> A connected");
         write(server_a_id, "s", 1);
@@ -105,13 +110,16 @@ int main(int argc, char const *argv[])
             n = read(client, buffer, MAX_BUFFER);
             buffer[n] = '\0';
 
+
             if (strncmp(buffer, "s", 1) == 0)
             {
+                // Server connected
                 fprintf(stderr, "\nMessage : Server: %s connected", buffer);
                 continue;
             }
             else
             {
+                //client connected
                 fprintf(stderr, "\nMessage : Client: %s connected", buffer);
 
                 int choose_server_A = choose_Server_A_B();
@@ -129,7 +137,7 @@ int main(int argc, char const *argv[])
                 }
             }
         }
-
+        // Server B
         else
             fprintf(stderr, "\n Recieved new client");
 
