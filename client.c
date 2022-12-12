@@ -1,4 +1,4 @@
-#include "constants.h"
+#include "header.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/socket.h>
@@ -54,7 +54,7 @@ int main(int argc, char const *argv[])
                 buff[n] = '\0';
                 write(STDOUT_FILENO, buff, n + 1);
             }
-        } while (strncmp(buff, "Command run successfully", 8));
+        } while (strncmp(buff, "Success-", 8));
     }
 
     return 0;

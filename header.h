@@ -8,7 +8,7 @@
 
 int PORT_A = 5000,
     PORT_B = 6000,
-    MAX_CLIENT = 2,
+    MAX_CLIENT = 5,
     MAX_CLIENT_PER_SERVER = 1000,
     MAX_BUFFER = 100000;
 
