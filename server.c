@@ -8,33 +8,31 @@
 #include <string.h>
 #include <sys/wait.h>
 
-int no_of_server_a_clients = 0, no_of_server_b_clients = 0, total_clients = -1;
+int total_Clients_A = 0, total_Clients_B = 0, total_Count_Clients = -1;
 
-// determines which server to join
-int join_server_a_or_b()
+// Logic to choose Servers
+int choose_Server_A_B()
 {
-    // a -> 1, b -> 0
-    int join_server;
-    if (no_of_server_a_clients < MAX_PROCESS_PER_SERVER)
-        join_server = 1;
-    else if (no_of_server_b_clients < MAX_PROCESS_PER_SERVER)
-        join_server = 0;
-    else if (total_clients % 2 == 0)
-        join_server = 0;
+    int choose_server;
+    if (total_Clients_A < MAX_CLIENT)
+        choose_server = 1;
+    else if (total_Clients_B < MAX_CLIENT)
+        choose_server = 0;
+    else if (total_Count_Clients % 2 == 0)
+        choose_server = 0;
     else
-        join_server = 1;
+        choose_server = 1;
 
-    return join_server;
+    return choose_server;
 }
 
-int run(char *buff, int length)
+int run_command(char *buff, int length)
 {
-    int exitStatus = -1;
-    // child Process
+    
     if (fork() == 0)
     {
         system(buff);
-        fprintf(stderr, "\nrun: after running system");
+        fprintf(stderr, "\nrRunning system command");
         exit(1);
     }
     else
@@ -45,107 +43,98 @@ int run(char *buff, int length)
 
 void ServeClient(int sd, const char *serverType)
 {
-    char message[MAX_LENGTH];
+    char message[MAX_BUFFER];
     int n;
-    // make the screen descriptor designate the client socket
+
     dup2(sd, STDOUT_FILENO);
     dup2(sd, STDIN_FILENO);
-    // dup2(sd, STDERR_FILENO);
+    dup2(sd, STDERR_FILENO);
     while (1)
     {
-        fprintf(stderr, "\nserveClient: reading from client");
-        n = read(sd, message, MAX_LENGTH);
+        fprintf(stderr, "\nmessage : Client input ");
+        n = read(sd, message, MAX_BUFFER);
       
-        // quit if the client sends 'quit'
+        //  'quit' to exit
         message[n] = '\0';
-        fprintf(stderr, "\nserveClient: client command: %s", message);
+        fprintf(stderr, "\nmessage :  command -> %s", message);
         if (strncmp(message, "quit", 4) == 0)
         {
-            fprintf(stderr, "Client Quit: %s\n", message);
+            fprintf(stderr, "Successfully closed : %s\n", message);
             close(sd);
             exit(0);
         }
         else
         {
-            run(message, n);
-            write(sd, "DONE----", 9);
+            run_command(message, n);
+            write(sd, "Success-", 9);
         }
     }
 }
 
 int main(int argc, char const *argv[])
 {
-    // check if A or B passed for server name
     if (argc < 2)
     {
-        printf("\nPlease Pass server A or B\n");
+        printf("\nSyntax : ./Server A or B\n");
         exit(1);
     }
 
     int sd, server_a_id, client, n;
-    char buffer[MAX_LENGTH];
+    char buffer[MAX_BUFFER];
     if (strcmp(argv[1], "A") == 0)
     {
-        createServer(&sd, SERVER_A_PORT_NUMBER);
+        create_Server(&sd, PORT_A);
     }
     else
     {
-        createServer(&sd, SERVER_B_PORT_NUMBER);
-        connectToServer(&server_a_id, SERVER_A_IP, SERVER_A_PORT_NUMBER);
-        fprintf(stderr, "\nServer B connected to Server A");
+        create_Server(&sd, PORT_B);
+        connect_Server(&server_a_id, IP_SERVER_A, PORT_A);
+        fprintf(stderr, "\nMessage : Server B -> A connected");
         write(server_a_id, "s", 1);
     }
 
-    fprintf(stderr, "\n%s Server Started-----------------", argv[1]);
+    fprintf(stderr, "\n%s Server running---------", argv[1]);
 
     while (1)
     {
         client = accept(sd, (struct sockaddr *)NULL, NULL);
 
-        // only handle this inside server A
         if (strcmp(argv[1], "A") == 0)
         {
-            total_clients++;
-            n = read(client, buffer, MAX_LENGTH);
+            total_Count_Clients++;
+            n = read(client, buffer, MAX_BUFFER);
             buffer[n] = '\0';
 
-            // if server B is connected
             if (strncmp(buffer, "s", 1) == 0)
             {
-                fprintf(stderr, "\nMessage from Server: %s", buffer);
+                fprintf(stderr, "\nMessage : Server: %s connected", buffer);
                 continue;
             }
             else
             {
-                fprintf(stderr, "\nMessage from Client: %s", buffer);
+                fprintf(stderr, "\nMessage : Client: %s connected", buffer);
 
-                // check condition here which server to join
-                int join_server_a = join_server_a_or_b();
-                if (join_server_a)
+                int choose_server_A = choose_Server_A_B();
+                if (choose_server_A)
                 {
-                    no_of_server_a_clients++;
+                    total_Clients_A++;
                     write(client, "A", 1);
                 }
                 else
                 {
-                    no_of_server_b_clients++;
+                    total_Clients_B++;
                     write(client, "B", 1);
                     close(client);
                     continue;
                 }
-                // fprintf(stderr, "\n Total clients: %d, A: %d, B: %d, join_server: %d", total_clients, no_of_server_a_clients, no_of_server_b_clients, join_server_a);
             }
         }
 
         else
-            fprintf(stderr, "\nClient Accepted");
+            fprintf(stderr, "\n Recieved new client");
 
         if (fork() == 0)
             ServeClient(client, argv[1]);
-        else
-        {
-            // decrease client count
-        }
     }
     return 0;
 }

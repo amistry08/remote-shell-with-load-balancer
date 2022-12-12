@@ -11,51 +11,49 @@
 
 int main(int argc, char const *argv[])
 {
-    char buffer[MAX_LENGTH];
+    char buff[MAX_BUFFER];
     int server, n;
 
-    connectToServer(&server, SERVER_A_IP, SERVER_A_PORT_NUMBER);
+    connect_Server(&server, IP_SERVER_A, PORT_A);
     write(server, "c", 1);
 
-    n = read(server, buffer, 1);
-    buffer[n] = '\0';
+    n = read(server, buff, 1);
+    buff[n] = '\0';
 
-    if (strncmp(buffer, "A", 1) == 0)
+    if (strncmp(buff, "A", 1) == 0)
     {
-        fprintf(stderr, "\nConnected To Server %s", buffer);
+        fprintf(stderr, "\nServer connected to %s", buff);
     }
     else
     {
-        connectToServer(&server, SERVER_B_IP, SERVER_B_PORT_NUMBER);
-        fprintf(stderr, "\nConnected To Server %s", buffer);
+        connect_Server(&server, IP_SERVER_B, PORT_B);
+        fprintf(stderr, "\nServer connected to %s", buff);
     }
 
     while (1)
     {
-        // prompt
+        
         write(STDOUT_FILENO, "--------------------------\n\n\n>>>", 32);
-        n = read(STDIN_FILENO, buffer, MAX_LENGTH);
-        buffer[n] = '\0';
+        n = read(STDIN_FILENO, buff, MAX_BUFFER);
+        buff[n] = '\0';
 
-        // send commands to the server using space" " to seperate arguments
-        write(server, buffer, strlen(buffer) + 1);
-        // user types 'quit' to close the connection
-        if (strncmp(buffer, "quit", 4) == 0)
+        write(server, buff, strlen(buff) + 1);
+        
+        //  'quit' to exit
+        if (strncmp(buff, "quit", 4) == 0)
         {
-            printf("Connection Ended\n");
+            printf("Successfull closed connection\n");
             close(server);
             exit(0);
         }
         do
         {
-            if (n = read(server, buffer, MAX_LENGTH))
+            if (n = read(server, buff, MAX_BUFFER))
             {
-                buffer[n] = '\0';
-                write(STDOUT_FILENO, buffer, n + 1);
-                // fprintf(stderr, "\nOutput From Server: %d", n);
+                buff[n] = '\0';
+                write(STDOUT_FILENO, buff, n + 1);
             }
-        } while (strncmp(buffer, "DONE----", 8));
-        // strncmp(buffer, "----------------------------------------", 40)
+        } while (strncmp(buff, "Command run successfully", 8));
     }
 
     return 0;

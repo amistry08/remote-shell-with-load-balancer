@@ -6,19 +6,16 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 
-int SERVER_A_PORT_NUMBER = 5000,
-    SERVER_B_PORT_NUMBER = 6000,
-    LOAD_BALANCER_PORT_NUMBER = 9656,
-    MAX_PROCESS_PER_SERVER = 2,
-    MAX_PROCESSES = 1000,
-    MAX_WORD_LENGTH = 40,
-    MAX_LENGTH = 100000;
+int PORT_A = 5000,
+    PORT_B = 6000,
+    MAX_CLIENT = 2,
+    MAX_CLIENT_PER_SERVER = 1000,
+    MAX_BUFFER = 100000;
 
-char SERVER_A_IP[] = "127.0.1.1";
-char SERVER_B_IP[] = "127.0.1.1";
-char LOAD_BALANCER_IP[] = "127.0.0.1";
+char IP_SERVER_A[] = "127.0.1.1";
+char IP_SERVER_B[] = "127.0.1.1";
 
-void connectToServer(int *server, char *ip, int portNumber)
+void connect_Server(int *server, char *ip, int portNumber)
 {
 
     socklen_t len;
@@ -26,36 +23,35 @@ void connectToServer(int *server, char *ip, int portNumber)
 
     if ((*server = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
-        fprintf(stderr, "Cannot create a socket\n");
+        fprintf(stderr, "ERROR : Socket cannot be created\n");
         exit(1);
     }
 
-    // config the server socket
+    // configuration
     servAdd.sin_family = AF_INET;
     servAdd.sin_port = htons((uint16_t)portNumber);
     if (inet_pton(AF_INET, ip, &servAdd.sin_addr) < 0)
     {
-        fprintf(stderr, " inet_pton() has failed\n");
+        fprintf(stderr, "ERROR : Failed to run inet_pton()\n");
         exit(2);
     }
 
     if (connect(*server, (struct sockaddr *)&servAdd, sizeof(servAdd)) < 0)
     {
-        fprintf(stderr, "Connection refused...\n");
-        fprintf(stderr, "Check if server is running on the right port and try again...\n");
+        fprintf(stderr, "ERROR : Connection Failed...\n");
+        fprintf(stderr, "Verify Server port number and try again...\n");
         exit(3);
     }
-    // get the port number
 }
 
-int createServer(int *server, int portNumber)
+int create_Server(int *server, int portNumber)
 {
     socklen_t len;
     struct sockaddr_in servAdd;
 
     if ((*server = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
-        perror("Error creating new socket");
+        perror("ERROR : Socket cannot be created\n");
         exit(1);
     }
 
@@ -64,9 +60,9 @@ int createServer(int *server, int portNumber)
     servAdd.sin_port = htons((uint16_t)portNumber);
 
     bind(*server, (struct sockaddr *)&servAdd, sizeof(servAdd));
-    if (listen(*server, MAX_PROCESSES) < 0)
+    if (listen(*server, MAX_CLIENT_PER_SERVER) < 0)
     {
-        printf("Error Creating Server\n");
+        printf("ERROR : Server cannot be created\n");
         exit(1);
     }
 }
